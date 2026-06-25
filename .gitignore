@@ -1,0 +1,8 @@
+# Local environment files with secrets
+.env
+.env.*
+!.env.example
+
+# Python cache created by local PoC scripts
+__pycache__/
+*.py[cod]

@@ -125,3 +125,26 @@ PoC 1차 모델 선택은 다음 기준으로 한다.
 - FriendliAI의 OpenAI compatibility 문서는 Model APIs, Dedicated Endpoints, Container가 OpenAI-compatible이며 base URL과 API key 변경으로 기존 SDK를 쓸 수 있다고 안내한다.
 - FriendliAI K-EXAONE 모델 페이지는 `LGAI-EXAONE/K-EXAONE-236B-A23B`를 reasoning, agentic tool use, multilingual Korean, 256K context에 강한 모델로 소개한다.
 - LG AI Research의 EXAONE 4.0 GitHub 문서는 EXAONE 4.0 계열이 32B와 1.2B 두 크기로 구성된다고 설명한다.
+
+## 9. Codex 웹 프로젝트 환경 변수 주입 후 바로 할 검증
+
+Codex 웹 브라우저 환경에서 레포/프로젝트별 환경 설정 화면의 **환경 변수** 항목에 `FRIENDLI_API_KEY`를 키 이름과 값으로 저장한 뒤에는, 새 작업 세션에서 저장소의 스모크 테스트로 FriendliAI OpenAI-compatible chat completions 호출이 실제로 성공하는지 확인한다. 여기서 말하는 위치는 Secret 항목이 아니라, 사용자가 키 제목과 값을 직접 입력한 환경 변수 항목이다. 이미 실행 중이던 세션에는 새 환경 변수가 자동으로 반영되지 않을 수 있으므로, 키를 방금 추가했다면 새 Codex 작업을 시작하거나 세션 환경을 갱신한 뒤 테스트한다.
+
+```bash
+python3 scripts/friendli_smoke_test.py
+```
+
+이 스크립트는 다음을 확인한다.
+
+- `FRIENDLI_API_KEY`가 현재 프로세스 환경에서 읽히는지 확인한다.
+- `FRIENDLI_BASE_URL`, `FRIENDLI_MODEL`, `FRIENDLI_TEMPERATURE`, `FRIENDLI_TOP_P`, `FRIENDLI_MAX_TOKENS`를 사용해 작은 한국어 수업자료 샘플을 생성한다.
+- API 키는 앞/뒤 일부만 마스킹해 출력하고, 전체 키는 출력하지 않는다.
+- 응답 시간, usage 정보가 있으면 usage, 모델 출력 샘플을 기록해 PoC 품질 비교의 첫 기준값으로 삼는다.
+
+실패 시 우선 확인할 항목은 다음과 같다.
+
+1. Codex 웹 프로젝트 설정의 환경 변수 항목에서 키 이름이 정확히 `FRIENDLI_API_KEY`인지 확인한다. Secret 항목에 넣었다는 뜻이 아니다.
+2. 환경 변수를 추가한 뒤 새 작업 세션을 시작했는지 확인한다. 현재 셸에서 `FRIENDLI_API_KEY`가 비어 있으면 스크립트는 API를 호출하지 않는다.
+3. `FRIENDLI_BASE_URL`이 현재 FriendliAI 대시보드/문서의 OpenAI-compatible base URL과 일치하는지 확인한다.
+4. `FRIENDLI_MODEL` 값이 해당 계정에서 사용 가능한 모델 ID 또는 Dedicated Endpoint ID인지 확인한다.
+5. HTTP 401/403이면 키 권한 또는 과금/프로젝트 설정을 확인하고, HTTP 404/400이면 모델 ID와 endpoint 유형을 확인한다.
