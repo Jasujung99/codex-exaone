@@ -1,3 +1,7 @@
+# Dependencies and build output
+node_modules/
+dist/
+
 # Local environment files with secrets
 .env
 .env.*
@@ -6,3 +10,6 @@
 # Python cache created by local PoC scripts
 __pycache__/
 *.py[cod]
+
+# OS files
+.DS_Store
